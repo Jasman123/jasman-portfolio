@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sourcing the World Cup — Jasman Jasman</title>
+<meta name="author" content="Jasman Jasman">
+<meta name="description" content="Case study by Jasman Jasman — an AI-agent sourcing pipeline for Startup World Cup: 490 event-organizer contacts shipped across four regions, and the data-integrity audit that found 78% of a 504-row batch carried fabricated LinkedIn URLs.">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sourcing the World Cup — Jasman Jasman">
+<meta property="og:description" content="An AI-agent sourcing pipeline for Startup World Cup: 490 contacts shipped across four regions, and the data-integrity audit that found 78% of a 504-row batch carried fabricated LinkedIn URLs.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sourcing the World Cup — Jasman Jasman">
+<meta name="twitter:description" content="An AI-agent sourcing pipeline for Startup World Cup: 490 contacts shipped across four regions, and the audit that found 78% of a 504-row batch carried fabricated LinkedIn URLs.">
+<style>
+  html,body{margin:0;height:100%}
+  html{-webkit-text-size-adjust:100%}
+  :root {
+    color-scheme: light dark;
+    --paper:   #EBECEE;
+    --surface: #F6F7F8;
+    --surface-2:#EFF1F3;
+    --ink:     #12171C;
+    --muted:   #565D66;
+    --faint:   #878E97;
+    --line:    rgba(18, 23, 28, 0.14);
+    --line-soft:rgba(18, 23, 28, 0.08);
+    --grid:    rgba(18, 23, 28, 0.045);
+    --accent:  #1E3BDE;
+    --accent-2:#0F1FA8;
+    --accent-wash:#E3E7FB;
+    --on-accent:#FFFFFF;
+    --shadow:  0 1px 0 rgba(18,23,28,0.04), 0 12px 40px -24px rgba(18,23,28,0.45);
+
+    --ok:      #146B52;
+    --warn:    #8C5A14;
+    --crit:    #A32E24;
+    --ok-wash: #DDEFE8;
+    --warn-wash:#F6EBD8;
+    --crit-wash:#F8E4E1;
+
+    --f-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+    --step--1: clamp(0.78rem, 0.76rem + 0.1vw, 0.84rem);
+    --step-0:  clamp(1rem, 0.97rem + 0.15vw, 1.08rem);
+    --step-1:  clamp(1.2rem, 1.12rem + 0.4vw, 1.5rem);
+    --step-2:  clamp(1.5rem, 1.3rem + 1vw, 2.1rem);
+    --step-3:  clamp(2.2rem, 1.7rem + 2.6vw, 3.6rem);
+    --step-4:  clamp(2.4rem, 1.7rem + 3.6vw, 4.4rem);
+
+    --wrap: 1024px;
+    --measure: 37rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0B0F13; --surface:#12181E; --surface-2:#171E25; --ink:#E9ECEF; --muted:#939BA5; --faint:#626A74;
+      --line:rgba(255,255,255,0.10); --line-soft:rgba(255,255,255,0.06); --grid:rgba(255,255,255,0.035);
+      --accent:#5C79FF; --accent-2:#8AA0FF; --accent-wash:#1B2140; --on-accent:#0B0F13;
+      --shadow:0 1px 0 rgba(0,0,0,0.4), 0 24px 60px -30px rgba(0,0,0,0.9);
+      --ok:#4FBF97; --warn:#D9A441; --crit:#E4776A;
+      --ok-wash:#12301F; --warn-wash:#33270F; --crit-wash:#3A1B18;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#EBECEE; --surface:#F6F7F8; --surface-2:#EFF1F3; --ink:#12171C; --muted:#565D66; --faint:#878E97;
+    --line:rgba(18,23,28,0.14); --line-soft:rgba(18,23,28,0.08); --grid:rgba(18,23,28,0.045);
+    --accent:#1E3BDE; --accent-2:#0F1FA8; --accent-wash:#E3E7FB; --on-accent:#FFFFFF;
+    --shadow:0 1px 0 rgba(18,23,28,0.04), 0 12px 40px -24px rgba(18,23,28,0.45);
+    --ok:#146B52; --warn:#8C5A14; --crit:#A32E24;
+    --ok-wash:#DDEFE8; --warn-wash:#F6EBD8; --crit-wash:#F8E4E1;
+  }
+  :root[data-theme="dark"] {
+    --paper:#0B0F13; --surface:#12181E; --surface-2:#171E25; --ink:#E9ECEF; --muted:#939BA5; --faint:#626A74;
+    --line:rgba(255,255,255,0.10); --line-soft:rgba(255,255,255,0.06); --grid:rgba(255,255,255,0.035);
+    --accent:#5C79FF; --accent-2:#8AA0FF; --accent-wash:#1B2140; --on-accent:#0B0F13;
+    --shadow:0 1px 0 rgba(0,0,0,0.4), 0 24px 60px -30px rgba(0,0,0,0.9);
+    --ok:#4FBF97; --warn:#D9A441; --crit:#E4776A;
+    --ok-wash:#12301F; --warn-wash:#33270F; --crit-wash:#3A1B18;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  img,svg,video{max-width:100%;height:auto}
+  h1,h2,h3,h4,p,figure,blockquote,dl,dd,ol,ul{margin:0}
+
+  body {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--ink);
+    font-family: var(--f-sans);
+    font-size: var(--step-0);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    min-height: 100%;
+  }
+  ::selection { background: var(--accent-wash); color: var(--ink); }
+
+  .wrap { width: min(100% - 3rem, var(--wrap)); margin-inline: auto; }
+  .col { max-width: var(--measure); }
+  .stack { display: flex; flex-direction: column; gap: 1.15rem; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  h1, h2, h3 { letter-spacing: -0.03em; font-weight: 660; line-height: 1.12; text-wrap: balance; }
+  .mono { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--faint); display: block; margin-bottom: .35rem;
+  }
+  .lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); letter-spacing: -0.015em; }
+  strong { font-weight: 600; color: var(--ink); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--paper) 80%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; padding-block: 0.9rem; gap: 1rem; }
+  .brand { font-family: var(--f-mono); font-weight: 600; letter-spacing: 0.02em; font-size: var(--step--1); text-decoration: none; color: var(--ink); }
+  .brand b { color: var(--accent); }
+  .back { font-family: var(--f-mono); font-size: var(--step--1); text-decoration: none; color: var(--muted); transition: color .18s ease; }
+  .back:hover, .back:focus-visible { color: var(--ink); }
+  .back .ar { color: var(--faint); margin-right: .4rem; }
+
+  /* ---------- Masthead ---------- */
+  .masthead { padding: clamp(2.6rem, 6vw, 4.5rem) 0 2.5rem; border-bottom: 1px solid var(--line); }
+  .byline { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; margin-bottom: 2rem; }
+  .byline .mark {
+    font-family: var(--f-mono); font-size: .8125rem; font-weight: 600; letter-spacing: .02em;
+    padding: .3rem .6rem; background: var(--accent); color: var(--on-accent); border-radius: 8px;
+  }
+  .byline .who { font-weight: 620; font-size: 1rem; letter-spacing: -0.015em; color: var(--ink); }
+  .byline .role { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+
+  .masthead h1 { font-size: var(--step-4); letter-spacing: -0.045em; line-height: 1.0; max-width: 16ch; font-weight: 680; }
+  .masthead h1 .sub { display: block; color: var(--faint); font-weight: 400; letter-spacing: -0.03em; }
+  .thesis { margin-top: 1.6rem; max-width: var(--measure); }
+
+  /* ---------- Metric strip ---------- */
+  .metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; margin-top: 2.6rem; box-shadow: var(--shadow);
+  }
+  .metric { background: var(--surface); padding: 1.1rem 1.15rem 1.2rem; display: flex; flex-direction: column; gap: .3rem; }
+  .metric .n { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .metric .n .unit { font-size: .9rem; font-weight: 600; color: var(--faint); letter-spacing: 0; }
+  .metric .k { font-family: var(--f-mono); font-size: .68rem; line-height: 1.35; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
+
+  /* ---------- Sections ---------- */
+  section { padding-top: clamp(3rem, 6vw, 4.5rem); }
+  .sec-head { display: flex; gap: 1.1rem; align-items: baseline; margin-bottom: 1.5rem; }
+  .sec-num { font-family: var(--f-mono); font-size: var(--step--1); font-weight: 600; color: var(--accent); flex: none; padding-top: .3rem; }
+  h2 { font-size: var(--step-2); }
+  h3 { font-size: var(--step-0); letter-spacing: -0.015em; margin-bottom: .4rem; }
+  h3.mono-h { font-family: var(--f-mono); font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- Pipeline strip ---------- */
+  .pipe {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; margin-top: 1.75rem; box-shadow: var(--shadow);
+  }
+  .stage { background: var(--surface); padding: .95rem 1rem 1.05rem; display: flex; flex-direction: column; gap: .45rem; }
+  .stage .si { font-family: var(--f-mono); font-size: .68rem; color: var(--faint); letter-spacing: .08em; }
+  .stage .sn { font-weight: 620; font-size: .9375rem; letter-spacing: -0.018em; }
+  .stage .sd { font-size: .8125rem; line-height: 1.4; color: var(--muted); }
+  .tag {
+    font-family: var(--f-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase;
+    padding: .16rem .42rem; border-radius: 5px; display: inline-block; width: fit-content; font-weight: 600;
+  }
+  .tag.net { background: var(--accent-wash); color: var(--accent-2); }
+  .tag.off { background: var(--surface-2); color: var(--faint); border: 1px solid var(--line-soft); }
+  .tag.human { background: var(--warn-wash); color: var(--warn); }
+  .tag.gate { background: var(--crit-wash); color: var(--crit); }
+
+  /* ---------- Tables ---------- */
+  .tw { overflow-x: auto; margin-top: 1.6rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 33rem; font-family: var(--f-mono); font-size: .8125rem; }
+  caption { text-align: left; font-family: var(--f-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); padding: .9rem 1.1rem .15rem; }
+  th, td { padding: .55rem 1.1rem; text-align: left; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 600; border-bottom: 1px solid var(--line); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-weight: 700; border-top: 1px solid var(--line); background: var(--surface-2); }
+  .tname { font-family: var(--f-sans); font-size: .9375rem; letter-spacing: -0.01em; }
+
+  /* ---------- Verification bar ---------- */
+  .vbar { display: flex; height: 2.4rem; margin-top: 1.5rem; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .vbar div { display: flex; align-items: center; justify-content: center; font-family: var(--f-mono); font-size: .68rem; font-weight: 600; color: #fff; min-width: 0; }
+  .v-ok { background: var(--ok); flex: 111; }
+  .v-wrong { background: var(--warn); flex: 319; }
+  .v-none { background: var(--crit); flex: 56; }
+  .v-co { background: var(--faint); flex: 15; }
+  .vkey { display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; margin-top: .75rem; font-family: var(--f-mono); font-size: .74rem; color: var(--muted); }
+  .vkey span { display: flex; align-items: center; gap: .4rem; }
+  .sw { width: .6rem; height: .6rem; flex: none; border-radius: 2px; }
+
+  /* ---------- Callouts and cards ---------- */
+  .note { border-left: 2px solid var(--accent); padding: .15rem 0 .15rem 1.15rem; color: var(--muted); }
+  .note.warn { border-left-color: var(--warn); }
+  .grid2 {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; margin-top: 1.6rem; box-shadow: var(--shadow);
+  }
+  .grid2 > .cell { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
+  .cell p { font-size: .9375rem; line-height: 1.5; color: var(--muted); }
+
+  /* ---------- Receipts ---------- */
+  .receipts { margin-top: 1.1rem; display: flex; flex-direction: column; gap: .75rem; }
+  .receipt {
+    font-family: var(--f-mono); font-size: .8125rem; line-height: 1.5;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+    padding: .9rem 1.05rem; display: flex; flex-direction: column; gap: .45rem;
+  }
+  .receipt .claim { color: var(--warn); }
+  .receipt .truth { color: var(--ok); }
+  .receipt .lbl { color: var(--faint); letter-spacing: .07em; text-transform: uppercase; font-size: .62rem; }
+
+  /* ---------- Quotes ---------- */
+  .quotes { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-top: 1.6rem; box-shadow: var(--shadow); }
+  .q { background: var(--surface); padding: 1rem 1.25rem; display: grid; grid-template-columns: 5.5rem 1fr; gap: 1.25rem; align-items: baseline; }
+  .q .when { font-family: var(--f-mono); font-size: .68rem; color: var(--faint); letter-spacing: .04em; }
+  .q .said { font-size: .9375rem; line-height: 1.5; color: var(--muted); }
+  .q .said b { font-weight: 600; color: var(--ink); }
+  @media (max-width: 34rem) { .q { grid-template-columns: 1fr; gap: .35rem; } }
+
+  /* ---------- Timeline ---------- */
+  .tl { margin-top: 1.6rem; border-top: 1px solid var(--line); }
+  .tl-row { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1.25rem; padding: .9rem 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+  .tl-row .d { font-family: var(--f-mono); font-size: .74rem; color: var(--accent); letter-spacing: .03em; font-weight: 600; }
+  .tl-row .e { font-size: .9375rem; line-height: 1.5; color: var(--muted); }
+  .tl-row .e b { font-weight: 600; color: var(--ink); }
+  @media (max-width: 34rem) { .tl-row { grid-template-columns: 1fr; gap: .2rem; } }
+
+  /* ---------- Chips ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }
+  .chip {
+    font-family: var(--f-mono); font-size: .74rem; letter-spacing: .01em;
+    padding: .35rem .6rem; border-radius: 7px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--surface);
+  }
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Closing CTA ---------- */
+  .cta { margin-top: 3rem; padding: 1.6rem 1.75rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+  .cta p { color: var(--muted); max-width: 46ch; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .01em;
+    text-decoration: none; padding: .8rem 1.2rem; border-radius: 10px; border: 1px solid transparent;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+  }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-primary:hover { background: var(--accent-2); transform: translateY(-2px); }
+
+  /* ---------- Footer ---------- */
+  footer.site {
+    margin-top: 4rem; padding-block: 2.2rem; border-top: 1px solid var(--line);
+    font-family: var(--f-mono); font-size: .74rem; color: var(--faint);
+    display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; justify-content: space-between;
+  }
+  footer.site a { color: var(--faint); }
+  footer.site a:hover { color: var(--accent); }
+
+  /* ---------- Side index ---------- */
+  .index { display: none; }
+  @media (min-width: 82rem) {
+    .index {
+      display: block; position: fixed; top: 50%; transform: translateY(-50%);
+      left: max(1.5rem, calc(50% - 32rem - 11rem)); width: 9.5rem; z-index: 10;
+    }
+    .index ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+    .index a { font-family: var(--f-mono); font-size: .68rem; letter-spacing: .04em; color: var(--faint); text-decoration: none; display: block; line-height: 1.3; }
+    .index a:hover { color: var(--accent); }
+    .index .n { color: var(--line); margin-right: .4rem; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../">jasman<b>.</b>ai</a>
+      <a class="back" href="../#work"><span class="ar">←</span>back to portfolio</a>
+    </div>
+  </header>
+
+  <nav class="index" aria-label="Sections">
+    <ol>
+      <li><a href="#brief"><span class="n">01</span>The brief</a></li>
+      <li><a href="#system"><span class="n">02</span>The system</a></li>
+      <li><a href="#coverage"><span class="n">03</span>Global coverage</a></li>
+      <li><a href="#gap"><span class="n">04</span>The Apollo gap</a></li>
+      <li><a href="#integrity"><span class="n">05</span>Integrity audit</a></li>
+      <li><a href="#safety"><span class="n">06</span>Safety rails</a></li>
+      <li><a href="#dedup"><span class="n">07</span>Dedup craft</a></li>
+      <li><a href="#method"><span class="n">08</span>How I work</a></li>
+      <li><a href="#timeline"><span class="n">09</span>Timeline</a></li>
+    </ol>
+  </nav>
+
+  <main class="wrap">
+
+    <header class="masthead">
+      <div class="byline">
+        <span class="mark">SWC-GTM</span>
+        <span class="who">Jasman Jasman</span>
+        <span class="role">Growth &amp; GTM Operations</span>
+        <span class="role">·</span>
+        <span class="role">Jackson Venture</span>
+      </div>
+
+      <h1>Sourcing the World Cup<span class="sub">in sixty countries</span></h1>
+
+      <div class="thesis stack">
+        <p class="lede">I ran an AI-agent sourcing pipeline that found, scored, verified and shipped event-organizer leads for <strong>Startup World Cup</strong> — the Pegasus Tech Ventures competition whose global final lands in San Francisco on 6 November 2026.</p>
+        <p>Four continents of regional coverage, a CRM held as the single source of truth, and a data-integrity audit that caught the failure which would have made most of the pipeline worthless before a single email went out.</p>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><span class="n">490</span><span class="k">Contacts shipped<br>import-ready</span></div>
+        <div class="metric"><span class="n">2,364</span><span class="k">Qualified records<br>audited vs Apollo</span></div>
+        <div class="metric"><span class="n">22<span class="unit">%</span></span><span class="k">LinkedIn pass rate<br>I uncovered</span></div>
+        <div class="metric"><span class="n">12,396</span><span class="k">Sponsor records<br>deduped for Clay</span></div>
+        <div class="metric"><span class="n">300</span><span class="k">Cities in the<br>coverage map</span></div>
+        <div class="metric"><span class="n">~$5</span><span class="k">API spend for a<br>two-region run</span></div>
+      </div>
+    </header>
+
+    <section id="brief" class="reveal">
+      <div class="sec-head"><span class="sec-num">01</span><div><span class="eyebrow">Context</span><h2>The brief</h2></div></div>
+      <div class="col stack">
+        <p>Startup World Cup runs regional qualifying events all over the world; the winners fly to San Francisco for the final. Someone has to <em>find</em> the people who can host a regional — the accelerator directors, chamber-of-commerce heads, ecosystem builders and festival organizers who already convene a startup crowd in their city — and get them into the CRM in a state good enough to email.</p>
+        <p>That was my remit at <strong>Jackson Venture</strong>. Three tracks ran in parallel — <strong>Regionals</strong>, <strong>Sponsorships</strong> and <strong>Seminar</strong> — against a stack where <strong>HubSpot</strong> is the source of truth, <strong>Apollo</strong> sends the sequences, and <strong>Clay</strong> fills the gaps. The constraint was never the CRM's throughput. It was finding real people, in the right cities, with contact details that hold up.</p>
+        <div class="note">
+          <p><strong>My role.</strong> I specified the rules, drove an AI coding agent to build and run the pipelines, then verified the output before anything shipped. I did not hand-write the codebase — I directed it, tested it against reality, and owned what came out the other end. Every number on this page traces to a file or a dated report in the repository.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="system" class="reveal">
+      <div class="sec-head"><span class="sec-num">02</span><div><span class="eyebrow">Architecture</span><h2>The system I directed</h2></div></div>
+      <div class="col stack">
+        <p>Eight stages, with a hard line drawn between the parts that touch the network and the parts that must stay deterministic. Scoring and dataset generation run offline so they are reproducible and testable; discovery and writes are isolated behind their own scripts and gates.</p>
+      </div>
+
+      <div class="pipe">
+        <div class="stage"><span class="si">01</span><span class="sn">Discovery</span><span class="sd">Web search per geography and track</span><span class="tag net">Network</span></div>
+        <div class="stage"><span class="si">02</span><span class="sn">Extraction</span><span class="sd">LLM parses pages into candidate fields</span><span class="tag net">Network</span></div>
+        <div class="stage"><span class="si">03</span><span class="sn">Rubric scoring</span><span class="sd">Org fit + persona fit, confidence, priority</span><span class="tag off">Offline</span></div>
+        <div class="stage"><span class="si">04</span><span class="sn">Personalization</span><span class="sd">Opening line and hook per contact</span><span class="tag net">Network</span></div>
+        <div class="stage"><span class="si">05</span><span class="sn">Dedup</span><span class="sd">Checked against HubSpot and Apollo</span><span class="tag net">Network</span></div>
+        <div class="stage"><span class="si">06</span><span class="sn">Review</span><span class="sd">Human qualification pass in HubSpot</span><span class="tag human">Human</span></div>
+        <div class="stage"><span class="si">07</span><span class="sn">Upload prep</span><span class="sd">Build the write plan, never fire it blind</span><span class="tag gate">Gated</span></div>
+        <div class="stage"><span class="si">08</span><span class="sn">Feedback set</span><span class="sd">JSONL record of every human decision</span><span class="tag off">Offline</span></div>
+      </div>
+
+      <div class="col stack" style="margin-top:1.75rem">
+        <h3 class="mono-h">The scoring rubric</h3>
+        <p>Candidates are not ranked by vibes. Organization Fit (1–5) scores on two paths — an existing event with real attendance and multi-year history, or a standalone convener with a network and the power to run one — and takes the higher. Persona Fit (1–5) scores decision authority, from founder or executive director down to affiliated volunteer. The two sum to a 2–10 Total Fit Score, carried alongside a 0–100 confidence figure that <em>drops</em> when evidence is thin.</p>
+        <p>The rule that mattered most: <strong>missing evidence lowers confidence, it never inflates a score.</strong> A guessed email or a single unverified source costs points. That principle is what made the integrity audit in section 05 possible at all.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="cell"><h3>HubSpot</h3><p>Source of truth for companies and contacts. Everything reconciles back here; local storage is a cache, never an authority.</p></div>
+        <div class="cell"><h3>Apollo</h3><p>Sequencing and outreach. Read-only to the agent — sequence assignment stays a human decision.</p></div>
+        <div class="cell"><h3>Clay</h3><p>Enrichment of last resort for LinkedIn URLs and emails, run in deliberate batches with the return audited.</p></div>
+        <div class="cell"><h3>Agent + search</h3><p>Web search for discovery, LLM extraction for parsing, a Python service and CLI pipelines to hold it together.</p></div>
+      </div>
+    </section>
+
+    <section id="coverage" class="reveal">
+      <div class="sec-head"><span class="sec-num">03</span><div><span class="eyebrow">Delivery</span><h2>Four regions, sourced and shipped</h2></div></div>
+      <div class="col stack">
+        <p>The first Asia run nearly failed. Singapore returned zero contacts — in one of the densest startup ecosystems on earth — which is the kind of result that tells you the tool is broken, not the market. Three faults, diagnosed and fixed:</p>
+        <p>The contact finder kept returning <span class="mono">"Unable to determine"</span> instead of real names, so I moved it to LinkedIn-based resolution. An over-aggressive quality filter was discarding genuine organizations — Enterprise Singapore and NUS among them — so I loosened it. And the event filter was inventing plausible-sounding events that did not exist, so I hard-restricted it to verifiable dates in the target window.</p>
+        <p>Singapore went from 0 to 6. Every European country hit the 3–6 target, most at 6.</p>
+      </div>
+
+      <div class="tw">
+        <table>
+          <caption>Import-ready output by region</caption>
+          <thead><tr><th>Region</th><th class="num">Countries</th><th class="num">Contacts</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="tname">Asia</td><td class="num">11</td><td class="num">38</td><td>1 duplicate removed at dedup</td></tr>
+            <tr><td class="tname">Europe</td><td class="num">21</td><td class="num">122</td><td>Every country hit target</td></tr>
+            <tr><td class="tname">Americas</td><td class="num">—</td><td class="num">207</td><td>North, Central and South</td></tr>
+            <tr><td class="tname">MENA / Africa / Oceania</td><td class="num">—</td><td class="num">123</td><td>Thinnest data coverage</td></tr>
+          </tbody>
+          <tfoot><tr><td class="tname">Shipped import-ready</td><td class="num"></td><td class="num">490</td><td>17 columns, clean, deduped</td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>A further <strong>239 events</strong> were prepared as their own import, and a <strong>300-city coverage map</strong> classified every location as actively covered, lapsed, in progress or whitespace — the artifact that answers "where are we not looking?" rather than "who did we find?".</p>
+        <div class="note warn">
+          <p>I reported the weakness with the wins. Email coverage across Asia and Europe was 2 and 3 contacts respectively — the contacts had names, companies and LinkedIn, but the email vendors simply have no data for those markets. And where no genuine event existed in the window, the column shipped <em>empty</em> rather than filled with something invented. Both went in the end-of-day report on the day they were found.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="gap" class="reveal">
+      <div class="sec-head"><span class="sec-num">04</span><div><span class="eyebrow">Analysis</span><h2>The Apollo gap: 2,364 down to 61</h2></div></div>
+      <div class="col stack">
+        <p>The recurring operational question was simple to state: <em>which qualified contacts in HubSpot are not yet in the Apollo list or sequence, and are actually ready to email?</em> Answering it honestly is where most of the pipeline's value turned out to sit.</p>
+      </div>
+
+      <div class="tw">
+        <table>
+          <caption>Funnel — 3 August audit</caption>
+          <thead><tr><th>Stage</th><th class="num">Records</th><th>What removed them</th></tr></thead>
+          <tbody>
+            <tr><td class="tname">Qualified in HubSpot</td><td class="num">2,364</td><td>Starting pool</td></tr>
+            <tr><td class="tname">Not yet in Apollo</td><td class="num">1,213</td><td>1,151 already sequenced</td></tr>
+            <tr><td class="tname">Has an email address</td><td class="num">75</td><td>1,138 unreachable — no email at all</td></tr>
+            <tr><td class="tname">Passed every field check</td><td class="num">61</td><td>Blank fields would break the send</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>The headline is not the 61. It is the <strong>1,138</strong>. Eighty-three percent of the qualified pool has no email address, which means targeting quality is irrelevant until enrichment is solved — and roughly 655 of them looked enrichable, so the fix was buyable. That reframing went to the decision-makers as the single biggest constraint on scaling Regional outreach, with a recommendation attached: approve the 61, but trim the seven contacts sitting at the same chamber of commerce down to one or two before sending.</p>
+      </div>
+    </section>
+
+    <section id="integrity" class="reveal">
+      <div class="sec-head"><span class="sec-num">05</span><div><span class="eyebrow">The find</span><h2>Most of the LinkedIn URLs were fabricated</h2></div></div>
+      <div class="col stack">
+        <p>After extending the working batch to 504 ranked contacts, I asked for something that sounds mundane: confirm the LinkedIn URL resolves to a real person. It does not sound like the most important task of the month. It was.</p>
+        <p>LinkedIn answers <span class="mono">HTTP 999</span> to every anonymous request, so a real profile and a fake one look <em>identical</em> to any automated checker. Verification meant searching for each person by name and employer and comparing the returned profile slug against the stored one — around 470 searches.</p>
+      </div>
+
+      <div class="vbar" role="img" aria-label="Of 504 LinkedIn URLs checked, 111 verified, 319 pointed to the wrong profile, 56 to no profile, 15 to company pages.">
+        <div class="v-ok">111</div><div class="v-wrong">319</div><div class="v-none">56</div><div class="v-co">15</div>
+      </div>
+      <div class="vkey">
+        <span><i class="sw" style="background:var(--ok)"></i>Verified real person — 22%</span>
+        <span><i class="sw" style="background:var(--warn)"></i>Wrong profile</span>
+        <span><i class="sw" style="background:var(--crit)"></i>No profile at all</span>
+        <span><i class="sw" style="background:var(--faint)"></i>Company page, not a person</span>
+      </div>
+
+      <div class="col stack" style="margin-top:1.75rem">
+        <p>The failure pattern was consistent enough to diagnose. Slugs had been built by gluing a person's name to their company or city — but genuine LinkedIn slugs carry a random numeric suffix that cannot be guessed. Every synthesized URL was therefore wrong by construction.</p>
+        <p>Pulling the thread found fabricated <em>people</em>, not just fabricated links. Two examples, anonymised:</p>
+      </div>
+
+      <div class="col receipts">
+        <div class="receipt">
+          <span class="lbl">As recorded in the source batch</span>
+          <span class="claim">Named contact · mid-size software firm · Omaha</span>
+          <span class="lbl">In reality</span>
+          <span class="truth">The chief executive of a major listed enterprise-software company</span>
+        </div>
+        <div class="receipt">
+          <span class="lbl">As recorded in the source batch</span>
+          <span class="claim">Named contact · national business incubator</span>
+          <span class="lbl">In reality</span>
+          <span class="truth">A former head of government</span>
+        </div>
+      </div>
+
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>Both traced to the same upstream import batches, which had supplied 506 of the 995 gap contacts. I flagged the source, not just the symptoms, and asked for twenty rows to be hand-checked before anything from those batches went live.</p>
+        <h3 class="mono-h" style="margin-top:.9rem">What I did about it</h3>
+        <p>Rows 101–504 were split by verdict: <strong>218 clean</strong> (140 of them with the URL corrected rather than merely accepted), <strong>123 quarantined</strong>, <strong>63 sent back for re-sourcing</strong>.</p>
+        <p>Then the counter-intuitive move. Contacts with <em>no</em> LinkedIn URL at all turned out to be the better pool: <strong>91% had an event name</strong> against 2% for the cleaned batch. Records with a fabricated URL were fabricated throughout; records sourced properly from real events had the event but no URL. So I rebuilt the working list around the 141 no-URL records and sent those to Clay for enrichment.</p>
+        <p>Clay returned 85 of the 141. Fifteen already existed in other sheets and were removed, leaving <strong>70 clean rows with LinkedIn populated 70/70</strong> — and one open question I put back to the vendor rather than swallowing: was dropping 56 of the 141 deliberate, or a silent failure?</p>
+      </div>
+    </section>
+
+    <section id="safety" class="reveal">
+      <div class="sec-head"><span class="sec-num">06</span><div><span class="eyebrow">Discipline</span><h2>Nothing writes itself</h2></div></div>
+      <div class="col stack">
+        <p>An agent with CRM credentials and no brakes is a liability. The rails I worked behind, and insisted on:</p>
+      </div>
+      <div class="grid2">
+        <div class="cell"><h3>Two-key writes</h3><p>No record reaches HubSpot unless two separate environment flags are both set. Schema changes need a third. Dry-run is the default state, not a mode you opt into.</p></div>
+        <div class="cell"><h3>Sequence assignment stays human</h3><p>The agent is structurally forbidden from writing the Apollo sequence field. Deciding who gets emailed is a person's call.</p></div>
+        <div class="cell"><h3>No invented evidence</h3><p>Scores cite only source URLs already collected. Thin evidence lowers confidence rather than quietly filling the gap.</p></div>
+        <div class="cell"><h3>Reversibility</h3><p>When two files went into the wrong Apollo list and sequence on 3 August, the first move was a revert manifest — an exact record of what was uploaded so it could be pulled back cleanly.</p></div>
+      </div>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>Two-thirds of the days logged in this project ended with <span class="mono">"Cost today: none — all work was read-only."</span> That is the point. Analysis is cheap and reversible; sends are neither.</p>
+      </div>
+    </section>
+
+    <section id="dedup" class="reveal">
+      <div class="sec-head"><span class="sec-num">07</span><div><span class="eyebrow">Craft</span><h2>Deduplication without data loss</h2></div></div>
+      <div class="col stack">
+        <p>A 12,415-record sponsorship list had to go into Clay with a unique identifier. The naive version of this job — group by company name, keep one — destroys real records, because the same company legitimately appears twice with different countries or different sponsorship status.</p>
+        <p>So the rule was narrower: remove a record only when it is <em>fully identical</em> to another, field by field. Twenty-eight duplicate name groups covering 57 records were compared line by line; only <strong>19 exact duplicates</strong> were removed. Every same-name-different-data record survived.</p>
+      </div>
+      <div class="tw">
+        <table>
+          <caption>Sponsorship list preparation</caption>
+          <thead><tr><th>Item</th><th class="num">Count</th></tr></thead>
+          <tbody>
+            <tr><td class="tname">Original records</td><td class="num">12,415</td></tr>
+            <tr><td class="tname">Duplicate name groups examined</td><td class="num">28</td></tr>
+            <tr><td class="tname">Records inside those groups</td><td class="num">57</td></tr>
+            <tr><td class="tname">Fully identical, removed</td><td class="num">19</td></tr>
+          </tbody>
+          <tfoot><tr><td class="tname">Delivered to Clay, with sequential unique ID</td><td class="num">12,396</td></tr></tfoot>
+        </table>
+      </div>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>The source CSV was never modified. The deduplication and the final import file were separate artifacts, each with a written record of what changed and why — so the decision could be audited or reversed by someone who was not in the room.</p>
+      </div>
+    </section>
+
+    <section id="method" class="reveal">
+      <div class="sec-head"><span class="sec-num">08</span><div><span class="eyebrow">Method</span><h2>How I work with an AI agent</h2></div></div>
+      <div class="col stack">
+        <p>The pattern that produced everything above: <strong>state the rule precisely, let the agent execute at volume, then check a sample against reality before it scales.</strong> The agent is fast and tireless and will confidently produce plausible garbage; the value I add is knowing which output to distrust and saying so early.</p>
+        <p>These are real instructions from the working log — they are the whole method in miniature:</p>
+      </div>
+
+      <div class="quotes">
+        <div class="q"><span class="when">28 Jul</span><span class="said">"First and last name must be a single word with no titles. City and country must not contain a slash or quotes indicating a choice between two options."<br><b>→ Field-level validation defined before the run, not patched after.</b></span></div>
+        <div class="q"><span class="when">28 Jul</span><span class="said">"Just check for duplicates — leave the import to me. I want the data ready for me to import."<br><b>→ A clean division: automation prepares, a human commits.</b></span></div>
+        <div class="q"><span class="when">9 Aug</span><span class="said">"Ensure the LinkedIn URL is reachable and a real person."<br><b>→ The instruction that surfaced the 78% failure rate.</b></span></div>
+        <div class="q"><span class="when">11 Aug</span><span class="said">"Filter out data with no event name and outside the September–October range."<br><b>→ Scope enforced as a hard filter rather than a hope.</b></span></div>
+        <div class="q"><span class="when">4 Aug</span><span class="said">"Explain to me what you have done with this data."<br><b>→ Never shipping output I could not account for line by line.</b></span></div>
+      </div>
+
+      <div class="col stack" style="margin-top:1.75rem">
+        <h3 class="mono-h">Reporting</h3>
+        <p>Every working day closed with a written end-of-day summary in the same shape: what was done, the cost incurred, the blockers, and the specific decisions needed from someone senior. Not a status update — a decision request. "Review the 340 duplicate flags, it costs nothing and unlocks 89 event-linked contacts" is a sentence a manager can act on in ten seconds.</p>
+      </div>
+
+      <div class="chips">
+        <span class="chip"><b>HubSpot</b> CRM operations</span>
+        <span class="chip"><b>Apollo</b> lists &amp; sequences</span>
+        <span class="chip"><b>Clay</b> enrichment</span>
+        <span class="chip"><b>AI agent</b> orchestration</span>
+        <span class="chip">Data QA &amp; <b>deduplication</b></span>
+        <span class="chip">Lead <b>scoring rubrics</b></span>
+        <span class="chip">CSV / TSV pipeline hygiene</span>
+        <span class="chip">Coverage &amp; <b>gap analysis</b></span>
+        <span class="chip">Stakeholder <b>EOD reporting</b></span>
+        <span class="chip">Google Sheets automation</span>
+        <span class="chip">English / Bahasa Indonesia</span>
+      </div>
+    </section>
+
+    <section id="timeline" class="reveal">
+      <div class="sec-head"><span class="sec-num">09</span><div><span class="eyebrow">Record</span><h2>Four weeks, logged</h2></div></div>
+      <div class="tl">
+        <div class="tl-row"><span class="d">16 Jul</span><span class="e"><b>Sponsorship list prepared for Clay.</b> 12,415 → 12,396 records, 19 exact duplicates removed, unique ID added, source file untouched.</span></div>
+        <div class="tl-row"><span class="d">22 Jul</span><span class="e"><b>Mapped the whole system.</b> Full architecture pass over the repository — pipeline, safety gates, what is reachable from the API versus what actually runs in production.</span></div>
+        <div class="tl-row"><span class="d">27 Jul</span><span class="e"><b>115-contact batch merged and deduped</b> against HubSpot ahead of a manual import, with a step-by-step import runbook.</span></div>
+        <div class="tl-row"><span class="d">29 Jul</span><span class="e"><b>Agent v2 shipped.</b> Diagnosed the Singapore-returns-zero failure; Asia (38) and Europe (122) sourced and deduped the same day for ~$5 of API spend.</span></div>
+        <div class="tl-row"><span class="d">30 Jul</span><span class="e"><b>Americas and MENA / Africa / Oceania</b> sourced; regional status written back for every country covered.</span></div>
+        <div class="tl-row"><span class="d">3 Aug</span><span class="e"><b>Apollo gap audit.</b> 2,364 qualified records checked; 61 ready to send; the 1,138-contact email blackhole identified as the real constraint. An accidental upload was caught and a revert manifest built.</span></div>
+        <div class="tl-row"><span class="d">4 Aug</span><span class="e"><b>Batch extended 100 → 504</b> with no overlap; missing event properties recovered from HubSpot, filling event names on 30 of the top 100.</span></div>
+        <div class="tl-row"><span class="d">5 Aug</span><span class="e"><b>The integrity audit.</b> 504 LinkedIn URLs verified individually; 22% pass rate; batch triaged into clean, quarantined and re-source; the fabricated-source finding escalated.</span></div>
+        <div class="tl-row"><span class="d">7–10 Aug</span><span class="e"><b>Whitespace sourcing.</b> Territories selected specifically to avoid overlap with cities already covered; 3–6 verified contacts per country against a 100+ target.</span></div>
+        <div class="tl-row"><span class="d">11–12 Aug</span><span class="e"><b>Partner batches with peer expansion.</b> For organizations with a confirmed September–October event, added the second and third decision-maker — co-founder, managing director, CTO — at the same verified organization.</span></div>
+      </div>
+    </section>
+
+    <section id="close" class="reveal">
+      <div class="sec-head"><span class="sec-num">—</span><div><span class="eyebrow">In one line</span><h2>What this work says about me</h2></div></div>
+      <div class="col stack">
+        <p>I can take a vague growth objective — "get us regional event organizers, worldwide" — and turn it into a scored, deduplicated, verified pipeline with an audit trail. I will use an AI agent to do in an afternoon what would take a team a fortnight. And I will tell you, in writing and on the day, when 78% of what it produced does not survive contact with reality.</p>
+        <p>The second part is the job.</p>
+      </div>
+
+      <div class="cta">
+        <p>More of my work — RAG platforms, multi-agent systems, and production AI backends.</p>
+        <a class="btn btn-primary" href="../#work">
+          Back to portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:1em;height:1em"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <footer class="site">
+      <span>Jasman Jasman · Growth &amp; GTM Operations, Jackson Venture</span>
+      <span>Startup World Cup regional sourcing · July–August 2026</span>
+    </footer>
+
+  </main>
+
+<script>
+  (function () {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</body>
+</html>

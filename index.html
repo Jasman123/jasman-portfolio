@@ -186,6 +186,12 @@
   .project h3 { margin: 0 0 .35rem; font-size: var(--step-1); letter-spacing: -0.02em; }
   .project p { margin: 0; color: var(--muted); font-size: var(--step-0); max-width: 62ch; }
   .project .ptags { margin-top: .7rem; display: flex; flex-wrap: wrap; gap: .45rem; }
+  .project .cs-flag {
+    font-family: var(--f-mono); font-size: .62rem; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; vertical-align: middle; white-space: nowrap;
+    padding: .2rem .45rem; border-radius: 5px; margin-left: .5rem;
+    background: var(--accent); color: var(--on-accent);
+  }
   .project .arrow { font-family: var(--f-mono); color: var(--accent); font-size: 1.3rem; transition: transform .18s ease; justify-self: end; }
   .project:hover .arrow { transform: translate(3px, -3px); }
   @media (max-width: 720px) { .project { grid-template-columns: 1fr; gap: .6rem; } .project .arrow, .project .pnum { display: none; } }
@@ -379,8 +385,17 @@
       <div class="wrap">
         <div class="sec-head"><span class="num">03</span><h2>Selected work</h2></div>
         <div class="projects reveal">
-          <a class="project" href="https://github.com/Jasman123/Fastapi-repo-project/tree/main/upwork-project/multi-doc-rag" target="_blank" rel="noopener">
+          <a class="project" href="sourcing-the-world-cup/">
             <span class="pnum">/01</span>
+            <div>
+              <h3>Sourcing the World Cup <span class="cs-flag">Case study</span></h3>
+              <p>Directed an AI-agent sourcing pipeline for Startup World Cup across 60+ countries — 490 contacts shipped import-ready, and a data-integrity audit that found only 22% of a 504-row batch had genuine LinkedIn URLs before a single email went out.</p>
+              <div class="ptags"><span class="chip">AI Agent Ops</span><span class="chip">HubSpot</span><span class="chip">Apollo</span><span class="chip">Clay</span><span class="chip">Data QA</span></div>
+            </div>
+            <span class="arrow">→</span>
+          </a>
+          <a class="project" href="https://github.com/Jasman123/Fastapi-repo-project/tree/main/upwork-project/multi-doc-rag" target="_blank" rel="noopener">
+            <span class="pnum">/02</span>
             <div>
               <h3>Multi-Document RAG Platform</h3>
               <p>Upload PDFs, ask questions, get answers with citations. Built on a clean ports-and-adapters architecture with hybrid (BM25 + vector) retrieval for higher recall.</p>
@@ -389,7 +404,7 @@
             <span class="arrow">↗</span>
           </a>
           <a class="project" href="https://github.com/Jasman123/Fastapi-repo-project/tree/main/upwork-project/research-agent" target="_blank" rel="noopener">
-            <span class="pnum">/02</span>
+            <span class="pnum">/03</span>
             <div>
               <h3>Autonomous Research Agent</h3>
               <p>A LangGraph agent that plans, searches the web, and writes structured research reports end to end — a multi-node graph with web search and multi-provider LLMs.</p>
@@ -398,7 +413,7 @@
             <span class="arrow">↗</span>
           </a>
           <a class="project" href="https://github.com/Jasman123/Fastapi-repo-project/tree/feat/support-agent/upwork-project/support-agent" target="_blank" rel="noopener">
-            <span class="pnum">/03</span>
+            <span class="pnum">/04</span>
             <div>
               <h3>Support Agent with RAG</h3>
               <p>Customer-support assistant grounded in a knowledge base. Graph compiled once at startup, hybrid retrieval over ingested docs, and streaming chat responses.</p>
@@ -407,7 +422,7 @@
             <span class="arrow">↗</span>
           </a>
           <a class="project" href="https://github.com/Jasman123/Fastapi-repo-project/tree/main/upwork-project/lead-agent" target="_blank" rel="noopener">
-            <span class="pnum">/04</span>
+            <span class="pnum">/05</span>
             <div>
               <h3>Lead-Generation Agent</h3>
               <p>Automates lead and job discovery with headless browser control, then syncs results to Google Sheets — an agentic pipeline over real-world web data.</p>
