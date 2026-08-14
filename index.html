@@ -186,11 +186,9 @@
   .project h3 { margin: 0 0 .35rem; font-size: var(--step-1); letter-spacing: -0.02em; }
   .project p { margin: 0; color: var(--muted); font-size: var(--step-0); max-width: 62ch; }
   .project .ptags { margin-top: .7rem; display: flex; flex-wrap: wrap; gap: .45rem; }
-  .project .cs-flag {
-    font-family: var(--f-mono); font-size: .62rem; font-weight: 600; letter-spacing: .1em;
-    text-transform: uppercase; vertical-align: middle; white-space: nowrap;
-    padding: .2rem .45rem; border-radius: 5px; margin-left: .5rem;
-    background: var(--accent); color: var(--on-accent);
+  .project .pmeta {
+    font-family: var(--f-mono); font-size: .68rem; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); margin: -.1rem 0 .5rem;
   }
   .project .arrow { font-family: var(--f-mono); color: var(--accent); font-size: 1.3rem; transition: transform .18s ease; justify-self: end; }
   .project:hover .arrow { transform: translate(3px, -3px); }
@@ -208,6 +206,9 @@
   .job ul li { max-width: 66ch; }
   .job ul li b { color: var(--ink); font-weight: 600; }
   .job .jtags { margin-top: .9rem; display: flex; flex-wrap: wrap; gap: .45rem; }
+  .job .jlink { margin: .9rem 0 0; font-family: var(--f-mono); font-size: var(--step--1); }
+  .job .jlink a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color .18s ease; }
+  .job .jlink a:hover, .job .jlink a:focus-visible { border-color: var(--accent); }
   @media (max-width: 620px) { .job { grid-template-columns: 1fr; gap: .5rem; } }
 
   /* ---------- Credentials ---------- */
@@ -231,7 +232,7 @@
 
   /* ---------- Contact ---------- */
   .contact { text-align: center; }
-  .contact .big { font-size: var(--step-3); letter-spacing: -0.04em; font-weight: 680; margin: .4rem 0 1.6rem; text-wrap: balance; }
+  .contact .big { font-size: var(--step-3); letter-spacing: -0.04em; font-weight: 680; margin: .4rem 0 1.6rem; text-wrap: balance; overflow-wrap: anywhere; }
   .contact .big a { color: var(--accent); text-decoration: none; border-bottom: 2px solid transparent; transition: border-color .18s; }
   .contact .big a:hover { border-color: var(--accent); }
   .social { display: flex; justify-content: center; flex-wrap: wrap; gap: .8rem; margin-top: .5rem; }
@@ -351,7 +352,7 @@
           <div class="stack-card">
             <h3><span class="tick">▹</span>Retrieval &amp; data</h3>
             <div class="chips">
-              <span class="chip">Qdrant</span><span class="chip">ChromaDB</span>
+              <span class="chip">Qdrant</span><span class="chip">ChromaDB</span><span class="chip">Milvus</span>
               <span class="chip">Hybrid (BM25 + RRF)</span><span class="chip">PyMuPDF</span>
             </div>
           </div>
@@ -365,8 +366,15 @@
           <div class="stack-card">
             <h3><span class="tick">▹</span>Infra &amp; DevOps</h3>
             <div class="chips">
-              <span class="chip">Docker</span><span class="chip">GCP</span>
+              <span class="chip">Docker</span><span class="chip">GCP</span><span class="chip">MinIO</span>
               <span class="chip">Playwright</span><span class="chip">Git Flow</span><span class="chip">Pytest</span>
+            </div>
+          </div>
+          <div class="stack-card">
+            <h3><span class="tick">▹</span>Observability</h3>
+            <div class="chips">
+              <span class="chip">OpenTelemetry</span><span class="chip">Grafana</span>
+              <span class="chip">Prometheus</span><span class="chip">Loki</span><span class="chip">Tempo</span>
             </div>
           </div>
           <div class="stack-card">
@@ -374,6 +382,13 @@
             <div class="chips">
               <span class="chip">Paramiko</span><span class="chip">PyQt</span>
               <span class="chip">SSH</span><span class="chip">Excel Macros</span>
+            </div>
+          </div>
+          <div class="stack-card">
+            <h3><span class="tick">▹</span>GTM &amp; data ops</h3>
+            <div class="chips">
+              <span class="chip">HubSpot</span><span class="chip">Apollo</span>
+              <span class="chip">Clay</span><span class="chip">Google Sheets</span><span class="chip">CSV / TSV pipelines</span>
             </div>
           </div>
         </div>
@@ -388,7 +403,8 @@
           <a class="project" href="sourcing-the-world-cup/">
             <span class="pnum">/01</span>
             <div>
-              <h3>Sourcing the World Cup <span class="cs-flag">Case study</span></h3>
+              <h3>Sourcing the World Cup</h3>
+              <div class="pmeta">Jackson Venture · Jul–Aug 2026</div>
               <p>Directed an AI-agent sourcing pipeline for Startup World Cup across 60+ countries — 490 contacts shipped import-ready, and a data-integrity audit that found only 22% of a 504-row batch had genuine LinkedIn URLs before a single email went out.</p>
               <div class="ptags"><span class="chip">AI Agent Ops</span><span class="chip">HubSpot</span><span class="chip">Apollo</span><span class="chip">Clay</span><span class="chip">Data QA</span></div>
             </div>
@@ -452,6 +468,22 @@
                 <li>Evaluated and configured <b>LLM inference on constrained GPUs</b> (llama.cpp, GGUF/Q4, vLLM) for air-gapped, sovereign deployment.</li>
               </ul>
               <div class="jtags"><span class="chip">LangGraph</span><span class="chip">Qdrant</span><span class="chip">FastAPI</span><span class="chip">PostgreSQL</span><span class="chip">vLLM</span><span class="chip">Docker</span></div>
+            </div>
+          </div>
+
+          <div class="job">
+            <div class="when">Jul — Aug 2026</div>
+            <div>
+              <h3>Growth &amp; GTM Operations</h3>
+              <div class="role-loc"><span class="co">Jackson Venture</span></div>
+              <ul>
+                <li>Directed an AI sourcing agent across <b>60+ countries</b> in four regions for Startup World Cup, shipping <b>490 import-ready contacts</b> and 239 events into HubSpot against a validated 17-column schema.</li>
+                <li>Ran the data-integrity audit that verified <b>504 LinkedIn URLs</b> individually and found a <b>22% pass rate</b>; traced the root cause to synthesized profile slugs and rebuilt the working pool around records that held up.</li>
+                <li>Audited <b>2,364 qualified CRM records</b> against Apollo and identified the 1,138-contact email gap as the binding constraint on outreach scale.</li>
+                <li>Deduplicated a <b>12,415-record</b> sponsorship list with zero loss of same-name-different-data rows, and defined field-validation standards enforced as hard filters rather than post-hoc cleanup.</li>
+              </ul>
+              <div class="jtags"><span class="chip">HubSpot</span><span class="chip">Apollo</span><span class="chip">Clay</span><span class="chip">AI Agent Ops</span><span class="chip">Data QA</span></div>
+              <p class="jlink"><a href="sourcing-the-world-cup/">Read the full case study →</a></p>
             </div>
           </div>
 
