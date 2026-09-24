@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Churn Rate Analysis — Jasman Jasman</title>
+<meta name="author" content="Jasman Jasman">
+<meta name="description" content="Case study by Jasman Jasman — a 90-day churn model for a 1,642-customer SaaS book, built entirely on interpretable models: two populations that churn in opposite directions, and a 2.86x lift on the calls that matter.">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Churn Rate Analysis — Jasman Jasman">
+<meta property="og:description" content="A 90-day churn model for a 1,642-customer SaaS book, built entirely on interpretable models: two populations that churn in opposite directions, and a 2.86x lift on the calls that matter.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Churn Rate Analysis — Jasman Jasman">
+<meta name="twitter:description" content="A 90-day churn model for a 1,642-customer SaaS book, built entirely on interpretable models — 2.86x lift on the calls that matter.">
+<style>
+  html,body{margin:0;height:100%}
+  html{-webkit-text-size-adjust:100%}
+  :root {
+    color-scheme: light dark;
+    --paper:   #EBECEE;
+    --surface: #F6F7F8;
+    --surface-2:#EFF1F3;
+    --ink:     #12171C;
+    --muted:   #565D66;
+    --faint:   #878E97;
+    --line:    rgba(18, 23, 28, 0.14);
+    --line-soft:rgba(18, 23, 28, 0.08);
+    --grid:    rgba(18, 23, 28, 0.045);
+    --accent:  #1E3BDE;
+    --accent-2:#0F1FA8;
+    --accent-wash:#E3E7FB;
+    --on-accent:#FFFFFF;
+    --shadow:  0 1px 0 rgba(18,23,28,0.04), 0 12px 40px -24px rgba(18,23,28,0.45);
+
+    --ok:      #146B52;
+    --warn:    #8C5A14;
+    --crit:    #A32E24;
+    --ok-wash: #DDEFE8;
+    --warn-wash:#F6EBD8;
+    --crit-wash:#F8E4E1;
+
+    --f-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+    --step--1: clamp(0.78rem, 0.76rem + 0.1vw, 0.84rem);
+    --step-0:  clamp(1rem, 0.97rem + 0.15vw, 1.08rem);
+    --step-1:  clamp(1.2rem, 1.12rem + 0.4vw, 1.5rem);
+    --step-2:  clamp(1.5rem, 1.3rem + 1vw, 2.1rem);
+    --step-3:  clamp(2.2rem, 1.7rem + 2.6vw, 3.6rem);
+    --step-4:  clamp(2.4rem, 1.7rem + 3.6vw, 4.4rem);
+
+    --wrap: 1024px;
+    --measure: 37rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0B0F13; --surface:#12181E; --surface-2:#171E25; --ink:#E9ECEF; --muted:#939BA5; --faint:#626A74;
+      --line:rgba(255,255,255,0.10); --line-soft:rgba(255,255,255,0.06); --grid:rgba(255,255,255,0.035);
+      --accent:#5C79FF; --accent-2:#8AA0FF; --accent-wash:#1B2140; --on-accent:#0B0F13;
+      --shadow:0 1px 0 rgba(0,0,0,0.4), 0 24px 60px -30px rgba(0,0,0,0.9);
+      --ok:#4FBF97; --warn:#D9A441; --crit:#E4776A;
+      --ok-wash:#12301F; --warn-wash:#33270F; --crit-wash:#3A1B18;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#EBECEE; --surface:#F6F7F8; --surface-2:#EFF1F3; --ink:#12171C; --muted:#565D66; --faint:#878E97;
+    --line:rgba(18,23,28,0.14); --line-soft:rgba(18,23,28,0.08); --grid:rgba(18,23,28,0.045);
+    --accent:#1E3BDE; --accent-2:#0F1FA8; --accent-wash:#E3E7FB; --on-accent:#FFFFFF;
+    --shadow:0 1px 0 rgba(18,23,28,0.04), 0 12px 40px -24px rgba(18,23,28,0.45);
+    --ok:#146B52; --warn:#8C5A14; --crit:#A32E24;
+    --ok-wash:#DDEFE8; --warn-wash:#F6EBD8; --crit-wash:#F8E4E1;
+  }
+  :root[data-theme="dark"] {
+    --paper:#0B0F13; --surface:#12181E; --surface-2:#171E25; --ink:#E9ECEF; --muted:#939BA5; --faint:#626A74;
+    --line:rgba(255,255,255,0.10); --line-soft:rgba(255,255,255,0.06); --grid:rgba(255,255,255,0.035);
+    --accent:#5C79FF; --accent-2:#8AA0FF; --accent-wash:#1B2140; --on-accent:#0B0F13;
+    --shadow:0 1px 0 rgba(0,0,0,0.4), 0 24px 60px -30px rgba(0,0,0,0.9);
+    --ok:#4FBF97; --warn:#D9A441; --crit:#E4776A;
+    --ok-wash:#12301F; --warn-wash:#33270F; --crit-wash:#3A1B18;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  img,svg,video{max-width:100%;height:auto}
+  h1,h2,h3,h4,p,figure,blockquote,dl,dd,ol,ul{margin:0}
+
+  body {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--ink);
+    font-family: var(--f-sans);
+    font-size: var(--step-0);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    min-height: 100%;
+  }
+  ::selection { background: var(--accent-wash); color: var(--ink); }
+
+  .wrap { width: min(100% - 3rem, var(--wrap)); margin-inline: auto; }
+  .col { max-width: var(--measure); }
+  .stack { display: flex; flex-direction: column; gap: 1.15rem; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  h1, h2, h3 { letter-spacing: -0.03em; font-weight: 660; line-height: 1.12; text-wrap: balance; }
+  .mono { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--faint); display: block; margin-bottom: .35rem;
+  }
+  .lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); letter-spacing: -0.015em; }
+  strong { font-weight: 600; color: var(--ink); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--paper) 80%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; padding-block: 0.9rem; gap: 1rem; }
+  .brand { font-family: var(--f-mono); font-weight: 600; letter-spacing: 0.02em; font-size: var(--step--1); text-decoration: none; color: var(--ink); }
+  .brand b { color: var(--accent); }
+  .back { font-family: var(--f-mono); font-size: var(--step--1); text-decoration: none; color: var(--muted); transition: color .18s ease; }
+  .back:hover, .back:focus-visible { color: var(--ink); }
+  .back .ar { color: var(--faint); margin-right: .4rem; }
+
+  /* ---------- Masthead ---------- */
+  .masthead { padding: clamp(2.6rem, 6vw, 4.5rem) 0 2.5rem; border-bottom: 1px solid var(--line); }
+  .byline { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; margin-bottom: 2rem; }
+  .byline .mark {
+    font-family: var(--f-mono); font-size: .8125rem; font-weight: 600; letter-spacing: .02em;
+    padding: .3rem .6rem; background: var(--accent); color: var(--on-accent); border-radius: 8px;
+  }
+  .byline .who { font-weight: 620; font-size: 1rem; letter-spacing: -0.015em; color: var(--ink); }
+  .byline .role { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+
+  .masthead h1 { font-size: var(--step-4); letter-spacing: -0.045em; line-height: 1.0; max-width: 18ch; font-weight: 680; }
+  .masthead h1 .sub { display: block; color: var(--faint); font-weight: 400; letter-spacing: -0.03em; }
+  .thesis { margin-top: 1.6rem; max-width: var(--measure); }
+
+  /* ---------- Metric strip ---------- */
+  .metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; margin-top: 2.6rem; box-shadow: var(--shadow);
+  }
+  .metric { background: var(--surface); padding: 1.1rem 1.15rem 1.2rem; display: flex; flex-direction: column; gap: .3rem; }
+  .metric .n { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .metric .n .unit { font-size: .9rem; font-weight: 600; color: var(--faint); letter-spacing: 0; }
+  .metric .k { font-family: var(--f-mono); font-size: .68rem; line-height: 1.35; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
+
+  /* ---------- Sections ---------- */
+  section { padding-top: clamp(3rem, 6vw, 4.5rem); }
+  .sec-head { display: flex; gap: 1.1rem; align-items: baseline; margin-bottom: 1.5rem; }
+  .sec-num { font-family: var(--f-mono); font-size: var(--step--1); font-weight: 600; color: var(--accent); flex: none; padding-top: .3rem; }
+  h2 { font-size: var(--step-2); }
+  h3 { font-size: var(--step-0); letter-spacing: -0.015em; margin-bottom: .4rem; }
+  h3.mono-h { font-family: var(--f-mono); font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- Figures ---------- */
+  figure.chart { margin-top: 1.75rem; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  figure.chart img { display: block; width: 100%; }
+  figure.chart figcaption { padding: .9rem 1.15rem 1.05rem; font-size: .85rem; line-height: 1.5; color: var(--muted); border-top: 1px solid var(--line); }
+  figure.chart figcaption b { color: var(--ink); }
+
+  /* ---------- Tables ---------- */
+  .tw { overflow-x: auto; margin-top: 1.6rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 33rem; font-family: var(--f-mono); font-size: .8125rem; }
+  caption { text-align: left; font-family: var(--f-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); padding: .9rem 1.1rem .15rem; }
+  th, td { padding: .55rem 1.1rem; text-align: left; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 600; border-bottom: 1px solid var(--line); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-weight: 700; border-top: 1px solid var(--line); background: var(--surface-2); }
+  .tname { font-family: var(--f-sans); font-size: .9375rem; letter-spacing: -0.01em; }
+
+  /* ---------- Callouts and cards ---------- */
+  .note { border-left: 2px solid var(--accent); padding: .15rem 0 .15rem 1.15rem; color: var(--muted); }
+  .note.warn { border-left-color: var(--warn); }
+  .grid2 {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; margin-top: 1.6rem; box-shadow: var(--shadow);
+  }
+  .grid2 > .cell { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
+  .cell p { font-size: .9375rem; line-height: 1.5; color: var(--muted); }
+
+  /* ---------- Chips ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }
+  .chip {
+    font-family: var(--f-mono); font-size: .74rem; letter-spacing: .01em;
+    padding: .35rem .6rem; border-radius: 7px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--surface);
+  }
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Closing CTA ---------- */
+  .cta { margin-top: 3rem; padding: 1.6rem 1.75rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+  .cta p { color: var(--muted); max-width: 46ch; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .01em;
+    text-decoration: none; padding: .8rem 1.2rem; border-radius: 10px; border: 1px solid transparent;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+  }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-primary:hover { background: var(--accent-2); transform: translateY(-2px); }
+
+  /* ---------- Footer ---------- */
+  footer.site {
+    margin-top: 4rem; padding-block: 2.2rem; border-top: 1px solid var(--line);
+    font-family: var(--f-mono); font-size: .74rem; color: var(--faint);
+    display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; justify-content: space-between;
+  }
+  footer.site a { color: var(--faint); }
+  footer.site a:hover { color: var(--accent); }
+
+  /* ---------- Side index ---------- */
+  .index { display: none; }
+  @media (min-width: 82rem) {
+    .index {
+      display: block; position: fixed; top: 50%; transform: translateY(-50%);
+      left: max(1.5rem, calc(50% - 32rem - 11rem)); width: 9.5rem; z-index: 10;
+    }
+    .index ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+    .index a { font-family: var(--f-mono); font-size: .68rem; letter-spacing: .04em; color: var(--faint); text-decoration: none; display: block; line-height: 1.3; }
+    .index a:hover { color: var(--accent); }
+    .index .n { color: var(--line); margin-right: .4rem; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../">jasman<b>.</b>ai</a>
+      <a class="back" href="../#work"><span class="ar">←</span>back to portfolio</a>
+    </div>
+  </header>
+
+  <nav class="index" aria-label="Sections">
+    <ol>
+      <li><a href="#brief"><span class="n">01</span>The brief</a></li>
+      <li><a href="#populations"><span class="n">02</span>Two populations</a></li>
+      <li><a href="#paradox"><span class="n">03</span>Simpson's paradox</a></li>
+      <li><a href="#leak"><span class="n">04</span>What can't be used</a></li>
+      <li><a href="#rules"><span class="n">05</span>Rules, not patterns</a></li>
+      <li><a href="#model"><span class="n">06</span>The model</a></li>
+      <li><a href="#metric"><span class="n">07</span>The metric</a></li>
+      <li><a href="#directions"><span class="n">08</span>Effect directions</a></li>
+      <li><a href="#choice"><span class="n">09</span>Why logistic regression</a></li>
+      <li><a href="#recommendation"><span class="n">10</span>The recommendation</a></li>
+      <li><a href="#weakest"><span class="n">11</span>What I'd do next</a></li>
+    </ol>
+  </nav>
+
+  <main class="wrap">
+
+    <header class="masthead">
+      <div class="byline">
+        <span class="mark">CHURN-DS</span>
+        <span class="who">Jasman Jasman</span>
+        <span class="role">Data Science — Churn Modeling</span>
+        <span class="role">·</span>
+        <span class="role">Confidential client (Upwork)</span>
+      </div>
+
+      <h1>Churn Rate Analysis<span class="sub">on a 1,642-customer SaaS book</span></h1>
+
+      <div class="thesis stack">
+        <p class="lede">A freelance engagement sourced through Upwork — client name withheld under NDA: predict 90-day churn for a SaaS product, from a 30&nbsp;June&nbsp;2026 snapshot — with one hard constraint. The retention team needed to know <em>why</em> a customer was flagged, not just that they were, so the brief ruled out anything that isn't inspectable: no tree ensembles, no neural nets, no black-box AutoML.</p>
+        <p>The real finding wasn't a model. It was that the customer base is two populations that respond to the same signal in opposite directions — and reporting one global number for either would have sent the retention team after the wrong accounts.</p>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><span class="n">1,642</span><span class="k">Customers<br>scored</span></div>
+        <div class="metric"><span class="n">3.3<span class="unit">x</span></span><span class="k">Churn gap between<br>the two segments</span></div>
+        <div class="metric"><span class="n">2.86<span class="unit">x</span></span><span class="k">Lift on the top<br>150 retention calls</span></div>
+        <div class="metric"><span class="n">2.4<span class="unit">KB</span></span><span class="k">Full model<br>artifact</span></div>
+        <div class="metric"><span class="n">&lt;1<span class="unit">ms</span></span><span class="k">Per row scored,<br>CPU only</span></div>
+        <div class="metric"><span class="n">64.5<span class="unit">%</span></span><span class="k">Of "unknown" segment<br>rows recovered by rule</span></div>
+      </div>
+    </header>
+
+    <section id="brief" class="reveal">
+      <div class="sec-head"><span class="sec-num">01</span><div><span class="eyebrow">Context</span><h2>The brief</h2></div></div>
+      <div class="col stack">
+        <p>The client runs a SaaS product with both self-serve and managed accounts, and wanted a 90-day churn score for every customer on the book as of a 30&nbsp;June&nbsp;2026 snapshot — 1,642 customers to score, drawn from a larger 7,396-row historical file used for training.</p>
+        <p>The constraint shaped everything that followed: only interpretable model families were on the table — logistic regression and other linear models, a single decision tree capped at depth 5, naive Bayes, k-NN, and explicit business rules, alone or combined. No random forests, no gradient boosting, no neural nets, nothing an account manager couldn't be given a plain-language reason from. That rule is why the project turned into an exploration exercise rather than a modeling one — with an interpretability ceiling, the only way to raise performance is to understand the population well enough that the routing does the work the model can't.</p>
+        <div class="note">
+          <p><strong>My role.</strong> End to end: data audit, cleaning, feature design, three routed models, and the retention recommendation that used them. Every number below is produced by a script in the delivered repository and is reproducible from the raw file. Client identity is withheld per our NDA — the analysis and figures are unaltered.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="populations" class="reveal">
+      <div class="sec-head"><span class="sec-num">02</span><div><span class="eyebrow">Finding 1</span><h2>One population, or two that behave differently?</h2></div></div>
+      <div class="col stack">
+        <p>Managed accounts churn <strong>3.3x</strong> more often than self-serve — 38.5% against 11.6%, with Wilson 95% intervals that don't come close to touching (managed [36.7%, 40.4%], self-serve [10.7%, 12.6%]). A two-sample KS test separates the groups on 6 of 8 numeric columns at p &lt; 0.0001. Pooling them into one model hides everything that follows.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/01_two_populations.png" alt="Churn rate and distribution comparison between managed and self-serve accounts, showing a 3.3x gap">
+        <figcaption>Managed vs. self-serve: churn rate and the underlying distributions that justify treating them as separate populations rather than one pooled file.</figcaption>
+      </figure>
+    </section>
+
+    <section id="paradox" class="reveal">
+      <div class="sec-head"><span class="sec-num">03</span><div><span class="eyebrow">Finding 2</span><h2>A variable that predicts churn in opposite directions</h2></div></div>
+      <div class="col stack">
+        <p>More support tickets means a managed account in trouble — and a self-serve account that's engaged. Managed churn climbs from 20.4% to 50.7% as tickets rise (<strong>+30.3pp</strong>); self-serve falls from 23.0% to 6.7% (<strong>−16.2pp</strong>). Pooled, the two effects cancel into a mild upward slope of +0.105 — a sign that's wrong for all <strong>4,202</strong> self-serve accounts in the file. This is Simpson's paradox, and it's the finding the whole solution is built around: of ten candidate variables screened the same way, exactly one points the same direction in both groups.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/02_simpson_tickets.png" alt="Support ticket volume vs churn rate, diverging between managed and self-serve accounts">
+        <figcaption>Support tickets in the last 3 months against churn rate, split by segment. The pooled trend line has the wrong sign for the larger half of the customer base.</figcaption>
+      </figure>
+    </section>
+
+    <section id="leak" class="reveal">
+      <div class="sec-head"><span class="sec-num">04</span><div><span class="eyebrow">Data audit</span><h2>What can't be used at the moment of prediction</h2></div></div>
+      <div class="col stack">
+        <p>Screening all columns rather than eyeballing them caught one that's bijective with the target and one that looks predictive but isn't:</p>
+      </div>
+      <div class="tw">
+        <table>
+          <caption>Columns excluded, and why</caption>
+          <thead><tr><th>Column</th><th>Evidence</th><th>Decision</th></tr></thead>
+          <tbody>
+            <tr><td class="tname">cancellation date</td><td>AUC of presence alone = 1.0000. Every non-null date falls after the snapshot — it's a record of the outcome, not a predictor of it.</td><td>Dropped. Nothing derived from it.</td></tr>
+            <tr><td class="tname">contract length (months)</td><td>+0.250 correlation pooled — the strongest in the file — but +0.003 and +0.026 within each segment. It carries almost no effect; it just labels which population a row belongs to.</td><td>Kept as the routing rule only, never as a model input.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>The second one is the trap: a variable that would have looked like the best predictor in the file to anyone who ran a correlation matrix without segmenting first.</p>
+      </div>
+    </section>
+
+    <section id="rules" class="reveal">
+      <div class="sec-head"><span class="sec-num">05</span><div><span class="eyebrow">Finding 3</span><h2>Rows whose outcome a rule decides, not a pattern</h2></div></div>
+      <div class="col stack">
+        <p>Inside the two-month renewal window, managed churn jumps to <strong>66.5%</strong> (n=269) against 35.4% outside it (n=2,274) — a 31.2-point gap with disjoint confidence intervals. Self-serve shows no effect at all: 11.3% vs 13.1%, intervals overlapping. Pooled, this looks like a global 46.3% spike at month 2. It isn't — it's a managed-only rule, and reporting it globally would send a retention team after the wrong list.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/04_renewal_window.png" alt="Churn rate spike inside the two-month renewal window, present only for managed accounts">
+        <figcaption>The renewal-window effect holds for managed accounts and disappears entirely for self-serve — a rule, not a model feature.</figcaption>
+      </figure>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>The segment field itself was missing for 9% of rows, concentrated entirely in one source system. Contract length turned out to be deterministic at three of its four values — no managed account has ever had a 1-month contract, no self-serve account a 24- or 36-month one — which recovered <strong>420 of 651</strong> missing segments (64.5%) with zero counter-examples across 7,396 rows.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/06_router_coverage.png" alt="Recovery of missing account segment using contract length as a deterministic rule">
+        <figcaption>Contract length recovers most of the missing segment field deterministically; the remainder ships as its own honestly-labeled "unknown" segment rather than a guess.</figcaption>
+      </figure>
+    </section>
+
+    <section id="model" class="reveal">
+      <div class="sec-head"><span class="sec-num">06</span><div><span class="eyebrow">Architecture</span><h2>Three logistic regressions behind one routing rule</h2></div></div>
+      <div class="col stack">
+        <p>Each row is cleaned, the leak is dropped, and the row is routed — on account type if present, on contract length if not, otherwise into an honestly-scored "unknown" segment. That segment's own logistic regression, fit on that segment's own feature list, scores the row. No ensembling, no voting: one row, one model, one probability.</p>
+      </div>
+      <div class="tw">
+        <table>
+          <caption>Per-segment models</caption>
+          <thead><tr><th>Segment</th><th class="num">n (train)</th><th>Features</th><th class="num">CV AUC</th></tr></thead>
+          <tbody>
+            <tr><td class="tname">Managed</td><td class="num">2,137</td><td>6</td><td class="num">0.726</td></tr>
+            <tr><td class="tname">Self-serve</td><td class="num">3,594</td><td>4</td><td class="num">0.698</td></tr>
+            <tr><td class="tname">Unknown</td><td class="num">185</td><td>4</td><td class="num">0.535</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>Regularization strength is itself a finding: managed lands on a strong penalty because its six features are informative and correlated; unknown, with only 185 rows, shrinks every coefficient below 0.016 — the model honestly saying it has nothing to work with rather than fitting noise. Runtime came in well inside a CPU-only, sub-millisecond budget: the full artifact is 2.4&nbsp;KB and the pipeline rebuilds from raw data in under 20 seconds.</p>
+      </div>
+    </section>
+
+    <section id="metric" class="reveal">
+      <div class="sec-head"><span class="sec-num">07</span><div><span class="eyebrow">Decision-first</span><h2>Which metric fits how the output gets used?</h2></div></div>
+      <div class="col stack">
+        <p>The retention team can make about 150 calls. So the metric that matters isn't AUC — it's: of those 150, how many really churn?</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/09_gains_precision_at_k.png" alt="Gains curve and precision at k=150 showing 2.86x lift over random selection">
+        <figcaption><strong>Precision@150 = 62.7%</strong> on a held-out set, against a 21.9% base rate — a 2.86x lift. That's 94 real churners reached out of 150 calls, versus roughly 33 if the same 150 were picked at random.</figcaption>
+      </figure>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>AUC is reported as a secondary number: it integrates over every threshold, including ones the team will never operate at. I also decomposed it honestly — knowing only which segment a customer is in gets 0.685 AUC on its own; the full routed model reaches 0.760. So the model adds roughly <strong>0.075 AUC</strong> over segment membership alone, and that's the number I'd stand behind if asked what the modeling actually contributed.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/10_calibration.png" alt="Calibration curve for the churn model, Brier score 0.139">
+        <figcaption>Calibration: Brier score 0.139, the best of five model families tested. The top predicted-risk bin forecasts 55.5% and observes 53.6%, so the probabilities can size a budget, not just rank a list.</figcaption>
+      </figure>
+    </section>
+
+    <section id="directions" class="reveal">
+      <div class="sec-head"><span class="sec-num">08</span><div><span class="eyebrow">The deliverable that mattered most</span><h2>For each variable, which way does the effect point?</h2></div></div>
+      <div class="col stack">
+        <p>This is the table the client actually needed. A single global odds ratio would have been actively wrong for one of the two segments on the single strongest signal in the file.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/07_odds_ratios.png" alt="Odds ratios per variable, split by managed and self-serve segment">
+        <figcaption>Support tickets: 1.38x churn odds per ticket in managed, 0.73x in self-serve — opposite directions, confirmed three independent ways (correlation sign, model-free quintile monotonicity, and the fitted coefficients).</figcaption>
+      </figure>
+      <div class="tw">
+        <table>
+          <caption>Effect direction by segment</caption>
+          <thead><tr><th>Variable</th><th>Managed</th><th>Self-serve</th><th>Reading</th></tr></thead>
+          <tbody>
+            <tr><td class="tname">Support tickets (3m)</td><td>1.38x ↑</td><td>0.73x ↓</td><td>Opposite. Trouble signal in managed, engagement signal in self-serve.</td></tr>
+            <tr><td class="tname">Late payments</td><td>1.57x ↑</td><td>1.38x ↑</td><td>Same direction in both — the only signal safe to state company-wide.</td></tr>
+            <tr><td class="tname">NPS score</td><td>0.75x ↓</td><td>not used</td><td>Managed only; flat in self-serve (r = −0.009).</td></tr>
+            <tr><td class="tname">Logins per seat</td><td>1.00x —</td><td>0.92x ↓</td><td>Self-serve only: engagement per seat protects against churn.</td></tr>
+            <tr><td class="tname">Account size (log seats)</td><td>1.02x ↑</td><td>0.94x ↓</td><td>Weak and opposite — real, but too small to act on.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="choice" class="reveal">
+      <div class="sec-head"><span class="sec-num">09</span><div><span class="eyebrow">Model selection</span><h2>Why logistic regression, given the constraint</h2></div></div>
+      <div class="col stack">
+        <p>All five interpretable families were benchmarked on identical folds and features. Logistic regression led on both segments (0.726 / 0.698), but the margin over naive Bayes on managed was inside one standard deviation — AUC alone didn't settle it. Three things did: best calibration (Brier 0.139 vs. 0.143–0.147), the smallest artifact by two orders of magnitude (2.4&nbsp;KB vs. k-NN's 546&nbsp;KB, which stores the training set and grows with it), and the only family that reports a signed, per-variable direction — which is exactly what the effect-direction table above required. A depth-5 decision tree would have split on ticket count in both segments and never surfaced that the sign flips.</p>
+      </div>
+      <figure class="chart">
+        <img src="assets/08_model_bakeoff.png" alt="Model comparison across five interpretable families on AUC, calibration, and artifact size">
+        <figcaption>Five allowed families, same folds, same features — logistic regression wins on the combination of calibration, artifact size, and interpretability, not on AUC alone.</figcaption>
+      </figure>
+    </section>
+
+    <section id="recommendation" class="reveal">
+      <div class="sec-head"><span class="sec-num">10</span><div><span class="eyebrow">Recommendation</span><h2>The 150 calls, and how to know if they worked</h2></div></div>
+      <div class="col stack">
+        <p><strong>Who to call.</strong> The top 150 by predicted probability — in practice almost entirely managed accounts carrying open tickets and late payments, low NPS, many inside the two-month renewal window.</p>
+        <p><strong>Who not to call.</strong> Two groups. The "unknown"-segment rows score at 0.535 AUC — close to random — so they go to engineering as a data-quality fix on the source system that drops the segment field, not a call list. And small self-serve accounts whose monthly fee sits below the cost of a retention call, regardless of predicted risk.</p>
+        <p><strong>How to measure it.</strong> Not by comparing the called group's churn against the rest — that comparison is confounded by construction. Instead: take the top 300 by predicted probability, randomly assign 150 to be called and 150 held back, stratified by segment and risk decile, and measure the churn difference between arms.</p>
+        <div class="note warn">
+          <p>Stated honestly up front: at a ~67% control-arm churn rate and n=150 per arm, the minimum detectable effect is about 15 percentage points. One quarter of results can't prove the program saved ten customers — either accept a two-to-three quarter read, or widen the holdback.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="weakest" class="reveal">
+      <div class="sec-head"><span class="sec-num">11</span><div><span class="eyebrow">Honesty</span><h2>What's weakest, and what I'd do with two more hours</h2></div></div>
+      <div class="grid2">
+        <div class="cell"><h3>The "unknown" segment isn't a real model</h3><p>0.535 CV AUC at n=185; the strongest available penalty shrinks every coefficient near zero. It returns roughly the base rate. Honest, but not prediction — flagged as such rather than dressed up.</p></div>
+        <div class="cell"><h3>Imputation ran before the split</h3><p>Segment medians for four columns were computed on the full frame, so the held-out numbers are mildly optimistic. Recorded as a flag rather than quietly fixed, since it's what produced the delivered predictions.</p></div>
+        <div class="cell"><h3>A regularization mismatch</h3><p>The C search ran inside a standardization pipeline; the shipped models are fit on raw columns. The direction and rank of every coefficient are unaffected, but the self-serve C value isn't exactly what was validated.</p></div>
+        <div class="cell"><h3>Next, in order</h3><p>Refit C without the scaler mismatch; move imputation inside the cross-validation folds and re-measure; bootstrap a confidence interval on precision@150 instead of quoting a single point estimate; test one self-serve-specific interaction (new account × onboarding incomplete) — the one hypothesis its weaker within-group AUC is visibly missing.</p></div>
+      </div>
+      <div class="col stack" style="margin-top:1.6rem">
+        <p>What I wouldn't spend the two hours on: chasing AUC. Once the population structure is understood, the model class stops being where the remaining signal lives.</p>
+      </div>
+
+      <div class="chips">
+        <span class="chip"><b>pandas</b> &amp; <b>NumPy</b> cleaning</span>
+        <span class="chip"><b>scikit-learn</b> logistic regression</span>
+        <span class="chip"><b>SciPy</b> hypothesis testing</span>
+        <span class="chip">Simpson's-paradox <b>segmentation</b></span>
+        <span class="chip">Feature gating &amp; <b>collinearity control</b></span>
+        <span class="chip">Precision@k &amp; <b>calibration</b></span>
+        <span class="chip">A/B measurement design</span>
+        <span class="chip">matplotlib / seaborn reporting</span>
+      </div>
+    </section>
+
+    <section id="close" class="reveal">
+      <div class="sec-head"><span class="sec-num">—</span><div><span class="eyebrow">In one line</span><h2>What this work says about me</h2></div></div>
+      <div class="col stack">
+        <p>Handed a model-family constraint that most people treat as a handicap, I treated it as the spec: find the structure that makes a simple model correct, instead of reaching for a complex one that papers over not having found it. The population split and the direction reversal are the deliverable — the three logistic regressions are just where that understanding ends up living.</p>
+      </div>
+
+      <div class="cta">
+        <p>More of my work — RAG platforms, multi-agent systems, and production AI backends.</p>
+        <a class="btn btn-primary" href="../#work">
+          Back to portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:1em;height:1em"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <footer class="site">
+      <span>Jasman Jasman · Data Science, confidential Upwork client</span>
+      <span>90-day churn prediction · September 2026</span>
+    </footer>
+
+  </main>
+
+<script>
+  (function () {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</body>
+</html>
